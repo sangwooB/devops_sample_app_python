@@ -15,7 +15,10 @@ pipeline {
     stage('============ Build Docker Image ============') {
         when { expression { return params.BUILD_DOCKER_IMAGE } }
         steps {
-          echo "stage build!!!"
+          echo "stage build start"
+          dir("${env.WORKSPACE}") {
+            sh 'docker build -t test:1 .'
+          }
         }
         post {
             always {
