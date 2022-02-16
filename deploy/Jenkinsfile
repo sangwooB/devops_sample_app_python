@@ -36,6 +36,7 @@ pipeline {
             }
         }
     }
+    }
     stage('============ Push Docker Image ============') {
         when { expression { return params.PUSH_DOCKER_IMAGE } }
         steps {
