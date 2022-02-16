@@ -9,8 +9,8 @@ pipeline {
     booleanParam(name : 'DEPLOY_WORKLOAD', defaultValue : true, description : 'DEPLOY_WORKLOAD')
 
     // CI
-    string(name : 'AWS_ACCOUNT_ID', defaultValue : '657976307134', description : 'AWS_ACCOUNT_ID')
-    string(name : 'DOCKER_IMAGE_NAME', defaultValue : 'demo', description : 'DOCKER_IMAGE_NAME')
+    string(name : 'AWS_ACCOUNT_ID', defaultValue : '765606275717', description : 'AWS_ACCOUNT_ID')
+    string(name : 'DOCKER_IMAGE_NAME', defaultValue : 'sangwoo', description : 'DOCKER_IMAGE_NAME')
     string(name : 'DOCKER_TAG', defaultValue : '1.0.0', description : 'DOCKER_TAG')
   }
 
@@ -44,6 +44,27 @@ pipeline {
                 aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}
                 docker push ${ECR_DOCKER_IMAGE}:${ECR_DOCKER_TAG}
           '''
+        }
+    }
+    stage('============ Run test code ============') {
+        when { expression { return params.RUN_TEST } }
+        agent { label 'build' }
+        steps {
+            sh'''
+                aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}
+                docker run --rm ${ECR_DOCKER_IMAGE}:${ECR_DOCKER_TAG} /root/.local/bin/pytest -v
+            '''
+        }
+    }
+    stage('============ Push Docker Image ============') {
+        when { expression { return params.PUSH_DOCKER_IMAGE } }
+        agent { label 'build' }
+        steps {
+            echo "Push Docker Image to ECR"
+            sh'''
+                aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}
+                docker push ${ECR_DOCKER_IMAGE}:${ECR_DOCKER_TAG}
+            '''
         }
     }
     stage('============ Deploy Workload ============') {
