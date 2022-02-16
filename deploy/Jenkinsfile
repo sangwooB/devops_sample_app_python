@@ -33,13 +33,6 @@ pipeline {
             }
         }
     }
-    stage('============ Run test code ============') {
-        when { expression { return params.RUN_TEST } }
-        steps {
-          echo "test code start"
-          sh('docker run --rm ${ECR_DOCKER_IMAGE}:${ECR_DOCKER_TAG} /root/.local/bin/pytest -v')
-        }
-    }
     stage('============ Push Docker Image ============') {
         when { expression { return params.PUSH_DOCKER_IMAGE } }
         steps {
