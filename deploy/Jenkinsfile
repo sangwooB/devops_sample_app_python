@@ -55,5 +55,6 @@ pipeline {
         steps {
             echo " Deploy "
         }
+    }
 }
 }
