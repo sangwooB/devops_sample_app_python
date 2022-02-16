@@ -36,7 +36,7 @@ pipeline {
     stage('============ Run test code ============') {
         when { expression { return params.RUN_TEST } }
         steps {
-          echo "stage test"
+          echo "test code start"
           sh('docker run --rm ${ECR_DOCKER_IMAGE} /roor/.local/bin/pytest -v')
         }
     }
