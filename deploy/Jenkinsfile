@@ -5,10 +5,17 @@ pipeline {
     booleanParam(name : 'BUILD_DOCKER_IMAGE', defaultValue : true, description : 'BUILD_DOCKER_IMAGE')
     booleanParam(name : 'RUN_TEST', defaultValue : true, description : 'RUN_TEST')
     booleanParam(name : 'PUSH_DOCKER_IMAGE', defaultValue : true, description : 'PUSH_DOCKER_IMAGE')
+    booleanParam(name : 'DEPLOY_WORKLOAD', defaultValue : true, description : 'DEPLOY_WORKLOAD')
+
+     string(name : 'AWS_ACCOUNT_ID', defaultValue : '765606275717', description : 'AWS_ACCOUNT_ID')
+     string(name : 'DOCKER_IMAGE_NAME', defaultValue : 'demo', description : 'DOCKER_IMAGE_NAME')
+     string(name : 'DOCKER_TAG', defaultValue : '1.0.0', description : 'DOCKER_TAG')
   }
 
   environment {
     REGION = "ap-northeast-2"
+    ECR_REPOSITORY = "${params.AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-2.amazonaws.com/sangwoo"
+    ECR_DOCKER_IMAGE = "${ECR_REPOSITORY}/${params.DOCKER_IMAGE_NAME}"
   }
 
   stages {
@@ -17,7 +24,7 @@ pipeline {
         steps {
           echo "stage build start -2"
           dir("${env.WORKSPACE}") {
-            sh 'docker build -t test:1 .'
+            sh 'docker build -t ${ECR_DOCKER_IMAGE}:${ECR_DOCKER_TAG} .'
           }
         }
         post {
@@ -30,13 +37,23 @@ pipeline {
         when { expression { return params.RUN_TEST } }
         steps {
           echo "stage test"
+          sh('docker run --rm ${ECR_DOCKER_IMAGE} /roor/.local/bin/pytest -v')
         }
     }
     stage('============ Push Docker Image ============') {
         when { expression { return params.PUSH_DOCKER_IMAGE } }
         steps {
           echo "stage push image"
+          sh'''
+                aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}
+                docker push ${ECR_DOCKER_IMAGE}:${ECR_DOCKER_TAG}
+          '''
         }
     }
+    stage('============ Deploy Workload ============') {
+        when { expression { return params.DEPLOY_WORKLOAD } }
+        steps {
+            echo " Deploy "
+        }
 }
 }
