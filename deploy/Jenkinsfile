@@ -48,7 +48,7 @@ pipeline {
     stage('============ Push Docker Image ============') {
         when { expression { return params.PUSH_DOCKER_IMAGE } }
         steps {
-          echo "stage push image"
+          echo "stage push image!"
           sh'''
                 aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}
                 docker push ${ECR_DOCKER_IMAGE}:${ECR_DOCKER_TAG}
